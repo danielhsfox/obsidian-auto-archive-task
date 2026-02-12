@@ -1,0 +1,11 @@
+{
+  "id": "auto-archive-task",
+  "name": "Auto Archive Task",
+  "version": "1.0.0",
+  "minAppVersion": "0.15.0",
+  "description": "Automatically moves completed tasks to a dedicated section at the end of your note with timestamp",
+  "author": "DanielHS",
+  "authorUrl": "",
+  "isDesktopOnly": false,
+  "fundingUrl": ""
+}

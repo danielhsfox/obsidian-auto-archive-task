@@ -1,0 +1,152 @@
+/* Auto Archive Task - Estilos principales */
+
+/* Notificaciones personalizadas */
+.auto-archive-task-notice {
+    background: var(--background-modifier-success) !important;
+    color: var(--text-on-accent) !important;
+    border: 1px solid var(--background-modifier-border) !important;
+}
+
+/* Tooltip para tareas movidas */
+.auto-archive-task-tooltip {
+    position: absolute;
+    background: var(--background-primary);
+    border: 1px solid var(--interactive-accent);
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 0.8em;
+    color: var(--text-normal);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    z-index: 1000;
+    animation: autoArchiveFadeIn 0.2s ease;
+}
+
+@keyframes autoArchiveFadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Animación para tareas que se mueven */
+@keyframes autoArchiveTaskMove {
+    0% { 
+        opacity: 1;
+        transform: translateY(0);
+    }
+    50% { 
+        opacity: 0.7;
+        transform: translateY(-5px);
+    }
+    100% { 
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+}
+
+.auto-archive-task-moving {
+    animation: autoArchiveTaskMove 0.3s ease forwards;
+}
+
+/* Estilo para la sección de tareas completadas */
+.markdown-rendered h2:has(+ ul li input[type="checkbox"][checked]),
+.markdown-rendered h2:has(+ ol li input[type="checkbox"][checked]) {
+    border-top: 2px solid var(--interactive-accent);
+    padding-top: 10px;
+    margin-top: 20px;
+}
+
+/* Checkbox completado con estilo especial */
+.markdown-source-view.mod-cm6 .cm-line .task-list-item-checkbox:checked {
+    background-color: var(--interactive-accent) !important;
+    border-color: var(--interactive-accent) !important;
+}
+
+/* Icono de timestamp */
+.auto-archive-task-timestamp {
+    font-size: 0.85em;
+    color: var(--text-muted);
+    margin-left: 4px;
+    opacity: 0.8;
+    font-style: italic;
+}
+
+/* Configuración del plugin */
+.setting-item.auto-archive-task-setting {
+    border-left: 3px solid var(--interactive-accent);
+    padding-left: 10px;
+}
+
+/* Grupo de configuración */
+.setting-item-heading.auto-archive-task-heading {
+    font-weight: 600;
+    color: var(--text-accent);
+    margin-top: 1.5em;
+    padding-bottom: 0.5em;
+    border-bottom: 1px solid var(--background-modifier-border);
+}
+
+/* Slider personalizado */
+.setting-item-control input[type="range"] {
+    accent-color: var(--interactive-accent);
+}
+
+/* Botón de comandos en la barra de estado */
+.status-bar-item.plugin-auto-archive-task {
+    cursor: pointer;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: var(--background-secondary);
+    border: 1px solid var(--background-modifier-border);
+    font-size: 0.8em;
+}
+
+.status-bar-item.plugin-auto-archive-task:hover {
+    background: var(--background-modifier-hover);
+}
+
+/* Estilo para el icono del plugin en la barra lateral */
+.auto-archive-task-icon {
+    color: var(--text-accent);
+}
+
+/* Estilos responsivos */
+@media (max-width: 768px) {
+    .auto-archive-task-tooltip {
+        font-size: 0.7em;
+        padding: 3px 6px;
+    }
+}
+
+/* Modo oscuro optimizado */
+.theme-dark .auto-archive-task-tooltip {
+    background: var(--background-secondary);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+}
+
+/* Highlight para tareas recién movidas */
+.auto-archive-task-highlight {
+    background-color: var(--background-modifier-success);
+    animation: autoArchiveHighlightFade 2s ease;
+    border-radius: 2px;
+}
+
+@keyframes autoArchiveHighlightFade {
+    0% { background-color: var(--background-modifier-success); }
+    100% { background-color: transparent; }
+}
+
+/* Clase para tareas completadas en la sección */
+.auto-archive-task-completed {
+    opacity: 0.9;
+    transition: opacity 0.2s ease;
+}
+
+.auto-archive-task-completed:hover {
+    opacity: 1;
+}
+
+/* Separador para la sección */
+.auto-archive-task-divider {
+    border-top: 1px dashed var(--background-modifier-border);
+    margin: 1em 0;
+    padding-top: 1em;
+}
