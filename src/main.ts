@@ -364,32 +364,41 @@ export default class AutoArchiveTaskPlugin extends Plugin {
             }
 
             // Get insertion point in completed section
-            const insertionPoint = await this.findOrCreateCompletedSection(editor);
-            const lineAtInsertion = editor.getLine(insertionPoint.line);
+            // Get insertion point in completed section
+const insertionPoint = await this.findOrCreateCompletedSection(editor);
+let currentInsertionLine = insertionPoint.line;
 
-            // Sort tasks by original line (ascending) for chronological order
-            tasksToMove.sort((a, b) => a.line - b.line);
+// 🟢 CORRECCIÓN: Insertar salto de línea solo si es necesario (primera tarea después de contenido manual)
+const isAtEnd = currentInsertionLine >= editor.lineCount();
+const lineAtInsertion = !isAtEnd ? editor.getLine(currentInsertionLine) : '';
 
-            // Insert tasks in completed section
-            let currentInsertionLine = insertionPoint.line;
+// Si estamos al final del archivo o la línea de inserción NO está vacía,
+// y la línea anterior NO está vacía, entonces insertamos un salto de línea.
+if ((isAtEnd || lineAtInsertion.trim() !== '') && currentInsertionLine > 0) {
+    const prevLine = editor.getLine(currentInsertionLine - 1);
+    if (prevLine.trim() !== '') {
+        editor.replaceRange(
+            '\n',
+            { line: currentInsertionLine, ch: 0 },
+            { line: currentInsertionLine, ch: 0 }
+        );
+        currentInsertionLine++;
+    }
+}
 
-            if (lineAtInsertion.trim() !== '' && !/^- \[[ x]\]/.test(lineAtInsertion)) {
-                editor.replaceRange(
-                    '\n',
-                    { line: currentInsertionLine, ch: 0 },
-                    { line: currentInsertionLine, ch: 0 }
-                );
-                currentInsertionLine++;
-            }
+// Sort tasks by original line (ascending) for chronological order
+tasksToMove.sort((a, b) => a.line - b.line);
 
-            for (const task of tasksToMove) {
-                editor.replaceRange(
-                    task.text + '\n',
-                    { line: currentInsertionLine, ch: 0 },
-                    { line: currentInsertionLine, ch: 0 }
-                );
-                currentInsertionLine += task.lineCount;
-            }
+// Insert tasks in completed section
+for (const task of tasksToMove) {
+    editor.replaceRange(
+        task.text + '\n',
+        { line: currentInsertionLine, ch: 0 },
+        { line: currentInsertionLine, ch: 0 }
+    );
+    currentInsertionLine += task.lineCount;
+}
+ 
 
             // Position cursor correctly
             if (cursorWasInMovedTask) {
@@ -801,7 +810,7 @@ detectCheckboxChanges(editor: Editor): ChangesDetected {
         const line = originalLine.trim();
         
         if (!/^- \[[ x]\]\s/i.test(line)) continue;
-        if (line.includes('🔔') && /\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}/.test(line)) continue;
+        // if (line.includes('🔔') && /\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}/.test(line)) continue;
 
         const isChecked = /^- \[x\]\s/i.test(line);
         const indent = this.getIndentLevel(originalLine);
@@ -832,7 +841,7 @@ detectCheckboxChanges(editor: Editor): ChangesDetected {
         const line = originalLine.trim();
         
         if (!/^- \[[ x]\]\s/i.test(line)) continue;
-        if (line.includes('🔔') && /\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}/.test(line)) continue;
+        // if (line.includes('🔔') && /\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}/.test(line)) continue;
 
         const isChecked = /^- \[x\]\s/i.test(line);
         const indent = this.getIndentLevel(originalLine);
