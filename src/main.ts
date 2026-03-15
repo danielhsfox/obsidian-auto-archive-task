@@ -190,7 +190,7 @@ export default class AutoArchiveTaskPlugin extends Plugin {
         setTimeout(() => {
             this.isProcessing = false;
             console.log(`   🔓 [${executionId}] isProcessing liberado`);
-        }, 1000);
+        }, 300);
     }
 }
 
@@ -851,30 +851,10 @@ detectCheckboxChanges(editor: Editor): ChangesDetected {
         const iconCount = (originalLine.match(new RegExp(this.escapeRegExp(icon), 'g')) || []).length;
         
         // ============= SUBTAREA MARCADA =============
-        if (indent > 0 && isChecked) {
-            // ✅ SI YA TIENE TIMESTAMP - NO HACER NADA
-            if (hasTimestamp || iconCount > 0) {
-                continue;
-            }
-            
-            // 🟢 AÑADIR TIMESTAMP INMEDIATAMENTE
-            const newText = `${originalLine} ${icon} ${timestamp}`;
-            
-            editor.replaceRange(
-                newText,
-                { line: i, ch: 0 },
-                { line: i, ch: originalLine.length }
-            );
-            
-            changes.completedSubtasks.push({
-                line: i,
-                text: newText,
-                originalText: line,
-                originalLine
-            });
-            
-            console.log(`   ✅ TIMESTAMP AÑADIDO a línea ${i}: "${newText}"`);
-        }
+    if (indent > 0 && isChecked) {
+        // 🚫 NO HACER NADA CON LAS SUBTAREAS
+        continue;
+    }
         
         // ============= TAREA INDIVIDUAL =============
         else if (indent === 0 && isChecked && !this.hasSubtasks(editor, i)) {
