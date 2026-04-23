@@ -1,5 +1,5 @@
 /**
- * Dynamic Note Creator - Obsidian Plugin
+ * Auto Archive Completed Tasks - Obsidian Plugin
  * Copyright (c) 2025 danielhsfox
  * @license MIT
  */
@@ -802,15 +802,19 @@ detectCheckboxChanges(editor: Editor): ChangesDetected {
     const timestampPattern = new RegExp(`${this.escapeRegExp(icon)}\\s*\\d{4}-\\d{2}-\\d{2}\\s+\\d{2}:\\d{2}:\\d{2}`);
     const linesInBlocksToMove = new Set<number>();
 
+    // 🔥 NUEVO: Determinar la línea límite - solo procesar líneas ANTES de la sección de completadas
+    let maxLineToProcess = editor.lineCount() - 1;
+    if (completedSectionRange) {
+        // Solo procesar líneas que están ANTES del inicio de la sección de completadas
+        maxLineToProcess = completedSectionRange.start - 1;
+    }
+
     // --- PRIMERA PASADA: Identificar bloques ---
-    for (let i = 0; i < editor.lineCount(); i++) {
-        if (completedSectionRange && i >= completedSectionRange.start && i <= completedSectionRange.end) continue;
-        
+    for (let i = 0; i <= maxLineToProcess; i++) {
         const originalLine = editor.getLine(i);
         const line = originalLine.trim();
         
         if (!/^- \[[ x]\]\s/i.test(line)) continue;
-        // if (line.includes('🔔') && /\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}/.test(line)) continue;
 
         const isChecked = /^- \[x\]\s/i.test(line);
         const indent = this.getIndentLevel(originalLine);
@@ -833,28 +837,25 @@ detectCheckboxChanges(editor: Editor): ChangesDetected {
     }
 
     // --- SEGUNDA PASADA: Procesar cambios ---
-    for (let i = 0; i < editor.lineCount(); i++) {
-        if (completedSectionRange && i >= completedSectionRange.start && i <= completedSectionRange.end) continue;
+    for (let i = 0; i <= maxLineToProcess; i++) {
         if (linesInBlocksToMove.has(i)) continue;
 
         const originalLine = editor.getLine(i);
         const line = originalLine.trim();
         
         if (!/^- \[[ x]\]\s/i.test(line)) continue;
-        // if (line.includes('🔔') && /\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}/.test(line)) continue;
 
         const isChecked = /^- \[x\]\s/i.test(line);
         const indent = this.getIndentLevel(originalLine);
         
         // 🚨 DETECCIÓN DE TIMESTAMP EXISTENTE
         const hasTimestamp = timestampPattern.test(originalLine);
-        const iconCount = (originalLine.match(new RegExp(this.escapeRegExp(icon), 'g')) || []).length;
         
         // ============= SUBTAREA MARCADA =============
-    if (indent > 0 && isChecked) {
-        // 🚫 NO HACER NADA CON LAS SUBTAREAS
-        continue;
-    }
+        if (indent > 0 && isChecked) {
+            // 🚫 NO HACER NADA CON LAS SUBTAREAS
+            continue;
+        }
         
         // ============= TAREA INDIVIDUAL =============
         else if (indent === 0 && isChecked && !this.hasSubtasks(editor, i)) {
@@ -922,31 +923,50 @@ getCompletedSectionRange(editor: Editor): SectionRange | null {
         const currentLine = lines[i];
         if (!currentLine) continue;
         
+        // Buscar el título exacto de la sección
         if (currentLine.trim() === sectionTitle.trim()) {
-            let startLine = i + 1;
+            let startLine = i + 1; // La sección comienza después del título
 
+            // Saltar el separador --- si existe
             if (startLine < lines.length) {
                 const nextLine = lines[startLine];
-                if (nextLine?.trim() === '---') {
+                if (nextLine && nextLine.trim() === '---') {
                     startLine++;
                 }
             }
 
+            // Encontrar dónde termina la sección
             let endLine = startLine;
             while (endLine < lines.length) {
                 const line = lines[endLine];
                 if (!line) break;
                 
                 const trimmed = line.trim();
-                if (trimmed === '' || trimmed.startsWith('#')) {
+                
+                // 🔥 MEJORADO: La sección termina cuando encontramos:
+                // 1. Un encabezado (cualquier nivel)
+                // 2. Una línea vacía (si hay al menos una tarea)
+                // 3. Final del archivo
+                if (trimmed.startsWith('#')) {
                     break;
                 }
+                
+                // Si encontramos una línea vacía después de haber procesado tareas
+                if (trimmed === '' && endLine > startLine) {
+                    // Verificar si la siguiente línea es un encabezado
+                    const nextLine = endLine + 1 < lines.length ? lines[endLine + 1] : null;
+                    if (nextLine && nextLine.trim().startsWith('#')) {
+                        break;
+                    }
+                    // Si no, continuar (podría ser un espacio entre tareas)
+                }
+                
                 endLine++;
             }
 
             return {
                 start: startLine,
-                end: endLine - 1
+                end: endLine - 1 // -1 porque endLine es la primera línea FUERA de la sección
             };
         }
     }
